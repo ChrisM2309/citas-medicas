@@ -17,4 +17,9 @@ class Patient extends Model
         'birth_date',
         'gender',
     ];
+
+    public function medicalRecord()
+    {
+        return $this->hasOne(MedicalRecord::class);
+    }
 }

@@ -18,7 +18,6 @@ class DoctorFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fake()->unique()->numberBetween(1, 20),
             'specialty' => fake()->randomElement(['Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Psychiatry']),
             'phone' => fake()->optional()->phoneNumber(),
         ];
