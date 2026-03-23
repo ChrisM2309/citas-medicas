@@ -13,8 +13,29 @@ class DoctorSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure every DOCTOR user has exactly one doctor profile.
+        User::query()
+            ->role('DOCTOR')
+            ->get()
+            ->each(function (User $user): void {
+                if ($user->doctor) {
+                    return;
+                }
+
+                Doctor::factory()->create([
+                    'user_id' => $user->id,
+                ]);
+            });
+
+        // Keep demo data volume: create additional doctors if needed.
+        $missingDoctors = max(0, 20 - Doctor::query()->count());
+
+        if ($missingDoctors === 0) {
+            return;
+        }
+
         User::factory()
-            ->count(20)
+            ->count($missingDoctors)
             ->create()
             ->each(function (User $user): void {
                 Doctor::factory()->create([

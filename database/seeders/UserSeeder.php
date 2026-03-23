@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\Doctor;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -36,6 +37,9 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
         $doctor->assignRole('DOCTOR');
+        Doctor::factory()->create([
+            'user_id' => $doctor->id,
+        ]);
 
         $assistant = User::factory()->create([
             'email' => 'asistente@correo.com',
