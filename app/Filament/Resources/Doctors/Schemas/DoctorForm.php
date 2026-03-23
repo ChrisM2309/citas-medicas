@@ -28,7 +28,11 @@ class DoctorForm
                             ->email()
                             ->placeholder('ejemplo@correo.com')
                             ->required()
-                            ->unique(User::class, 'email', ignoreRecord: true)
+                            ->unique(
+                                table: User::class,
+                                column: 'email',
+                                ignorable: fn($record) => $record?->user
+                            )
                             ->maxLength(255),
 
                         TextInput::make('password')
@@ -54,7 +58,12 @@ class DoctorForm
                             ->label('Teléfono')
                             ->tel()
                             ->placeholder('7000-7000')
-                            ->maxLength(9),
+                            ->maxLength(9)
+                            ->unique(
+                                table: 'doctors',
+                                column: 'phone',
+                                ignorable: fn($record) => $record
+                            ),
 
                         TextInput::make('specialty')
                             ->label('Especialidad')

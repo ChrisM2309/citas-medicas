@@ -21,7 +21,7 @@ class DoctorFactory extends Factory
         return [
             'user_id' => User::factory(),
             'specialty' => fake()->randomElement(['Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Psychiatry']),
-            'phone' => fake()->optional()->phoneNumber(),
+            'phone' => fake()->optional()->numerify('####-####'),
         ];
     }
 }

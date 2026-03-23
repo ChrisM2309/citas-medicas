@@ -26,9 +26,8 @@ class PatientForm
                 TextInput::make('email')
                     ->label('Correo electrónico')
                     ->email()
-                    ->maxLength(100)
-                    ->required()
-                    ->unique(table: Patient::class, column: 'email', ignoreRecord: true),
+                    ->placeholder('ejemplo@correo.com')
+                    ->maxLength(100),
                 TextInput::make('phone')
                     ->label('Teléfono')
                     ->maxLength(9)

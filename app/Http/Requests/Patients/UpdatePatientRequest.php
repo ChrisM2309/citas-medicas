@@ -23,7 +23,6 @@ class UpdatePatientRequest extends FormRequest
                 'sometimes',
                 'email',
                 'max:100',
-                Rule::unique('patients', 'email')->ignore($patientId),
             ],
             'phone' => ['nullable', 'string', 'max:9'],
             'birth_date' => ['nullable', 'date'],

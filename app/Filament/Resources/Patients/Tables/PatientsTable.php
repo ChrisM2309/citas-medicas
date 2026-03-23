@@ -26,10 +26,10 @@ class PatientsTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('Nombre')->searchable(),
-                TextColumn::make('lastname')->label('Apellido')->searchable(),
-                TextColumn::make('email')->label('Correo electrónico')->placeholder('ejemplo@correo.com')->searchable(),
-                TextColumn::make('phone')->label('Teléfono'),
+                TextColumn::make('name')->label('Nombre')->searchable()->sortable(),
+                TextColumn::make('lastname')->label('Apellido')->searchable()->sortable(),
+                TextColumn::make('email')->label('Correo electrónico')->placeholder('ejemplo@correo.com')->searchable()->sortable(),
+                TextColumn::make('phone')->label('Teléfono')->searchable(),
                 TextColumn::make('gender')
                     ->label('Género')
                     ->badge()

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('user_id')->unsigned()->unique();
             $table->string('specialty', 50);
-            $table->string('phone')->nullable();
+            $table->string('phone', 9)->nullable()->unique();
             $table->timestamps();
         });
     }
