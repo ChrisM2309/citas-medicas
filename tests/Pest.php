@@ -21,7 +21,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->in('Feature', 'Unit');
 
 beforeEach(function (): void {
     app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -93,6 +93,7 @@ function ensureBasePermissionsExist(): void
 {
     foreach ([
         'read_appointments',
+        'read_own_appointments',
         'read_all_appointments',
         'manage_appointments',
         'manage_patients',

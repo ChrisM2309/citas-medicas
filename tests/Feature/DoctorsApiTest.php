@@ -10,8 +10,8 @@ test('el listado de doctores requiere autenticacion', function () {
 });
 
 test('el listado de doctores devuelve registros al usuario autenticado', function () {
-    // Documentamos el comportamiento actual del controlador.
-    authenticateWithPermissions();
+    // El listado ahora esta protegido por la policy de doctores.
+    authenticateWithPermissions(['manage_users']);
     $doctorA = Doctor::factory()->create();
     $doctorB = Doctor::factory()->create();
 
@@ -24,7 +24,7 @@ test('el listado de doctores devuelve registros al usuario autenticado', functio
 
 test('se puede crear un doctor con un usuario valido', function () {
     // Cubrimos el alta basica de doctores y su relacion con usuarios.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $user = User::factory()->create();
 
     $this->postJson('/api/v1/doctors', [
@@ -38,7 +38,7 @@ test('se puede crear un doctor con un usuario valido', function () {
 
 test('no se puede crear un doctor con un user_id repetido', function () {
     // La relacion uno a uno entre usuario y doctor debe respetarse.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $user = User::factory()->create();
     Doctor::factory()->create(['user_id' => $user->id]);
 
@@ -50,10 +50,10 @@ test('no se puede crear un doctor con un user_id repetido', function () {
         ->assertJsonValidationErrors(['user_id']);
 });
 
-test('se puede consultar el detalle de un doctor autenticado', function () {
-    // Confirmamos que el show exponga el recurso esperado.
-    authenticateWithPermissions();
-    $doctor = Doctor::factory()->create();
+test('se puede consultar el detalle del doctor asociado al mismo usuario', function () {
+    // La policy permite al doctor ver su propio recurso aunque no administre usuarios.
+    $user = authenticateWithPermissions();
+    $doctor = Doctor::factory()->create(['user_id' => $user->id]);
 
     $this->getJson("/api/v1/doctors/{$doctor->id}")
         ->assertOk()
@@ -62,7 +62,7 @@ test('se puede consultar el detalle de un doctor autenticado', function () {
 
 test('se puede actualizar un doctor autenticado', function () {
     // Cubrimos la edicion de especialidad y telefono.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $doctor = Doctor::factory()->create();
 
     $this->putJson("/api/v1/doctors/{$doctor->id}", [
@@ -75,7 +75,7 @@ test('se puede actualizar un doctor autenticado', function () {
 
 test('el endpoint destroy realiza soft delete del doctor', function () {
     // Verificamos que la eliminacion no borre fisicamente el registro.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $doctor = Doctor::factory()->create();
 
     $this->deleteJson("/api/v1/doctors/{$doctor->id}")
