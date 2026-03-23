@@ -26,7 +26,7 @@ class PermissionSeeder extends Seeder
         // Permisos de medico
         collect([
             // Puede leer su propia agenda
-            'read_appointments',
+            'read_own_appointments',
             // Puede administrar los expedientes de sus pacientes
             'manage_medical_records',
         ])->each(function (string $permission) use ($doctor): void {

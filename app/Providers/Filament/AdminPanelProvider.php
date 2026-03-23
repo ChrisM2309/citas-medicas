@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->authGuard('web')
             ->login()
+            ->profile()
             ->colors([
                 'primary' => Color::hex('#00bfff'),
                 'pink' => Color::hex('#ff69b4'),

@@ -28,7 +28,7 @@ class PatientsTable
             ->columns([
                 TextColumn::make('name')->label('Nombre')->searchable(),
                 TextColumn::make('lastname')->label('Apellido')->searchable(),
-                TextColumn::make('email')->label('Correo electrónico')->searchable(),
+                TextColumn::make('email')->label('Correo electrónico')->placeholder('ejemplo@correo.com')->searchable(),
                 TextColumn::make('phone')->label('Teléfono'),
                 TextColumn::make('gender')
                     ->label('Género')
@@ -38,36 +38,50 @@ class PatientsTable
                         'M' => 'Masculino',
                         'F' => 'Femenino',
                         default => 'Otro',
-                    })
+                    }),
+                TextColumn::make('created_at')
+                    ->label('Fecha de registro')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('updated_at')
+                    ->label('Última actualización')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                TrashedFilter::make(),
+                TrashedFilter::make()
+                    ->label('Visibilidad del registro')
+                    ->placeholder('Solo activos')
+                    ->trueLabel('Todos')
+                    ->falseLabel('Solo eliminados')
             ])
             ->recordActions([
                 ActionGroup::make([
                     Action::make('manage_medical_record')
                         ->label('Gestionar Historial')
                         ->icon('heroicon-o-clipboard-document-list')
-                        ->color('primary') 
+                        ->color('primary')
                         ->visible(fn() => Auth::user()->can('manage_medical_records'))
-                        ->modalHeading('Expediente Clínico')
+                        ->modalHeading(fn(Patient $record): string => 'Expediente Médico de ' . $record->name . ' ' . $record->lastname)
                         ->modalWidth('2xl')
                         ->mountUsing(fn(Schema $schema, Patient $record) => $schema->fill(
                             $record->medicalRecord?->toArray() ?? []
                         ))
                         ->schema([
-                            Section::make('Información Médica')
-                                ->description('Todos los campos son opcionales')
+                            Section::make()
                                 ->schema([
                                     TextInput::make('blood_type')
                                         ->label('Tipo de sangre')
                                         ->placeholder('Ej: O+')
-                                        ->maxLength(3), 
+                                        ->maxLength(3),
 
                                     TextInput::make('allergies')
                                         ->label('Alergias')
                                         ->placeholder('Ninguna')
-                                        ->maxLength(255), 
+                                        ->maxLength(255),
 
                                     Textarea::make('chronic_diseases')
                                         ->label('Enfermedades crónicas')
@@ -86,7 +100,8 @@ class PatientsTable
                                         ->rows(3)
                                         ->maxLength(255)
                                         ->columnSpanFull(),
-                                ])->columns(2),
+                                ])
+                                ->columns(2),
                         ])
                         ->action(function (Patient $record, array $data) {
                             $record->medicalRecord()->updateOrCreate(
@@ -102,18 +117,21 @@ class PatientsTable
 
                             Notification::make()
                                 ->title('Historial actualizado')
-                                ->body('Los datos clínicos de ' . $record->name . ' se han guardado.')
                                 ->success()
                                 ->send();
                         }),
 
                     EditAction::make(),
-                    DeleteAction::make(),
-                    RestoreAction::make(),
-                ])
-                ->label('')
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->button(),
+                    DeleteAction::make()
+                        ->modalHeading('Confirmar eliminación')
+                        ->modalDescription(fn($record) => "¿Estás seguro de que deseas eliminar a {$record->name} {$record->lastname}? Esta acción se puede revertir desde la papelera de reciclaje."),
+                    RestoreAction::make()
+                        ->modalHeading("Confirmar restauración")
+                        ->modalDescription(fn($record) => "¿Estás seguro de que deseas restaurar a {$record->name} {$record->lastname}?"),
+                    ])
+                        ->label('')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->button(),
             ]);
     }
 }
