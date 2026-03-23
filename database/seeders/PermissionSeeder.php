@@ -18,6 +18,11 @@ class PermissionSeeder extends Seeder
         $doctor = Role::firstOrCreate(['name' => 'DOCTOR', 'guard_name' => 'web']);
         $assistant = Role::firstOrCreate(['name' => 'ASSISTANT', 'guard_name' => 'web']);
 
+        // Permiso para leer pacientes → todos
+        Permission::firstOrCreate(['name' => 'read_patients', 'guard_name'=> 'web']);
+        $doctor->givePermissionTo('read_patients');
+
+        
         // Permisos de medico
         collect([
             // Puede leer su propia agenda
@@ -44,6 +49,6 @@ class PermissionSeeder extends Seeder
 
         // Permiso para administrar usuarios (solo para admin)
         Permission::firstOrCreate(['name' => 'manage_users', 'guard_name' => 'web']);
-        $admin->givePermissionTo('manage_users');
+        $admin->givePermissionTo(Permission::all());
     }
 }

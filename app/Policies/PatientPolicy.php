@@ -13,12 +13,12 @@ class PatientPolicy
     */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('manage_patients');
+        return $user->hasAnyPermission(['manage_patients', 'read_patients']);
     }
 
     public function view(User $user, Patient $patient): bool
     {
-        return $user->hasPermissionTo('manage_patients');
+        return $user->hasAnyPermission(['manage_patients', 'read_patients']);
     }
 
     public function create(User $user): bool
