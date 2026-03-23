@@ -33,6 +33,6 @@ class DoctorPolicy
 
     public function delete(User $user, Doctor $doctor): bool
     {
-        return $user->hasPermissionTo('manage_users');
+        return $user->hasPermissionTo('manage_users') && $user->id !== $doctor->user_id;
     }
 }

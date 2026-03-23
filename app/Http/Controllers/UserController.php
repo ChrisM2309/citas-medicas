@@ -9,9 +9,20 @@ use App\Models\User;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(User::class, 'user');
+    }
+
     public function index()
     {
-        return UserResource::collection(User::latest()->get());
+        return UserResource::collection(
+            User::whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'doctor');
+            })
+                ->latest()
+                ->get()
+        );
     }
 
     public function store(StoreUserRequest $request)
