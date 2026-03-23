@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Schedule;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Doctor;
+use App\Models\Schedule;
+use Illuminate\Database\Seeder;
 
 class ScheduleSeeder extends Seeder
 {
@@ -14,21 +13,12 @@ class ScheduleSeeder extends Seeder
      */
     public function run(): void
     {
-        $doctors = Doctor::all();
-
-        foreach ($doctors as $doctor) {
-
-            $diasDeTrabajo = fake()->randomElements(
-                ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-                3
-            );
-
-            foreach ($diasDeTrabajo as $dia) {
-                Schedule::factory()->create([
+        Doctor::query()->get()->each(function (Doctor $doctor): void {
+            Schedule::factory()
+                ->count(fake()->numberBetween(1, 3))
+                ->create([
                     'doctor_id' => $doctor->id,
-                    'day_of_week' => $dia,
                 ]);
-            }
-        }
+        });
     }
 }

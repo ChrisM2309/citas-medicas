@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Appointment;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Doctor;
+use App\Models\Patient;
+use Illuminate\Database\Seeder;
 
 class AppointmentSeeder extends Seeder
 {
@@ -14,11 +14,18 @@ class AppointmentSeeder extends Seeder
      */
     public function run(): void
     {
-        $doctors = Doctor::all();
-        $doctorsIds = $doctors->pluck('id')->toArray();
+        $doctorIds = Doctor::query()->pluck('id');
+        $patientIds = Patient::query()->pluck('id');
 
-        Appointment::factory(
-            ['doctor_id' => fake()->randomElement($doctorsIds)]
-        )->count(20)->create();
+        if ($doctorIds->isEmpty() || $patientIds->isEmpty()) {
+            return;
+        }
+
+        Appointment::factory()
+            ->count(20)
+            ->create([
+                'doctor_id' => fake()->randomElement($doctorIds->all()),
+                'patient_id' => fake()->randomElement($patientIds->all()),
+            ]);
     }
 }

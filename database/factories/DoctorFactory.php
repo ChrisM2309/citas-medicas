@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Doctor;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,6 +19,7 @@ class DoctorFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::factory(),
             'specialty' => fake()->randomElement(['Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Psychiatry']),
             'phone' => fake()->optional()->phoneNumber(),
         ];
