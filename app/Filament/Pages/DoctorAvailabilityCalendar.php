@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class DoctorAvailabilityCalendar extends Page
 {
@@ -19,7 +20,7 @@ class DoctorAvailabilityCalendar extends Page
 
     protected static ?string $title = 'Calendario de disponibilidad médica';
 
-    protected static ?string $navigationGroup = 'Agenda';
+    protected static string|UnitEnum|null $navigationGroup = 'Agenda';
 
     protected static ?string $slug = 'calendar';
 
