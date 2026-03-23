@@ -1,26 +1,21 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Doctor;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\Doctors\StoreDoctorRequest;
+use App\Http\Requests\Doctors\UpdateDoctorRequest;
+use App\Models\Doctor;
 
 class DoctorController extends Controller
 {
-     public function index()
+    public function index()
     {
         return response()->json(Doctor::latest()->get());
     }
 
-    public function store(Request $request)
+    public function store(StoreDoctorRequest $request)
     {
-        $validated = $request->validate([
-            'user_id' => ['required', 'integer', 'unique:doctors,user_id'],
-            'specialty' => ['required', 'string', 'max:50'],
-            'phone' => ['nullable', 'string', 'max:9'],
-        ]);
-
-        $doctor = Doctor::create($validated);
+        $doctor = Doctor::create($request->validated());
 
         return response()->json($doctor, 201);
     }
@@ -30,15 +25,9 @@ class DoctorController extends Controller
         return response()->json($doctor);
     }
 
-    public function update(Request $request, Doctor $doctor)
+    public function update(UpdateDoctorRequest $request, Doctor $doctor)
     {
-        $validated = $request->validate([
-            'user_id' => ['sometimes', 'integer', 'unique:doctors,user_id,' . $doctor->id],
-            'specialty' => ['sometimes', 'string', 'max:50'],
-            'phone' => ['nullable', 'string', 'max:9'],
-        ]);
-
-        $doctor->update($validated);
+        $doctor->update($request->validated());
 
         return response()->json($doctor);
     }
@@ -48,8 +37,7 @@ class DoctorController extends Controller
         $doctor->delete();
 
         return response()->json([
-            'message' => 'Doctor eliminado correctamente'
+            'message' => 'Doctor eliminado correctamente',
         ]);
     }
 }
-
