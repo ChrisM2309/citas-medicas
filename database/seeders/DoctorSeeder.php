@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Doctor; 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Doctor;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DoctorSeeder extends Seeder
@@ -13,6 +13,13 @@ class DoctorSeeder extends Seeder
      */
     public function run(): void
     {
-        Doctor::factory()->count(20)->create();
+        User::factory()
+            ->count(20)
+            ->create()
+            ->each(function (User $user): void {
+                Doctor::factory()->create([
+                    'user_id' => $user->id,
+                ]);
+            });
     }
 }

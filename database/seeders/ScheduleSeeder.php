@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Schedule; 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Doctor;
+use App\Models\Schedule;
 use Illuminate\Database\Seeder;
 
 class ScheduleSeeder extends Seeder
@@ -13,6 +13,12 @@ class ScheduleSeeder extends Seeder
      */
     public function run(): void
     {
-        Schedule::factory()->count(20)->create();
+        Doctor::query()->get()->each(function (Doctor $doctor): void {
+            Schedule::factory()
+                ->count(fake()->numberBetween(1, 3))
+                ->create([
+                    'doctor_id' => $doctor->id,
+                ]);
+        });
     }
 }

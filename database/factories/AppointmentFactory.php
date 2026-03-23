@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Appointment;
+use App\Models\Doctor;
+use App\Models\Patient;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,8 +20,8 @@ class AppointmentFactory extends Factory
     public function definition(): array
     {
         return [
-            'patient_id' => fake()->numberBetween(1, 20),
-            'doctor_id' => fake()->numberBetween(1, 20),
+            'patient_id' => Patient::factory(),
+            'doctor_id' => Doctor::factory(),
             'appointment_date' => fake()->date(),
             'appointment_start_time' => fake()->time('H:i:s'),
             'appointment_end_time' => fake()->time('H:i:s'),

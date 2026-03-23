@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Doctor;
 use App\Models\Schedule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,7 @@ class ScheduleFactory extends Factory
     public function definition(): array
     {
         return [
-            'doctor_id' => fake()->numberBetween(1, 20),
+            'doctor_id' => Doctor::factory(),
             'day_of_week' => fake()->randomElement(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
             'start_time' => fake()->time('H:i:s'),
             'end_time' => fake()->time('H:i:s'),
