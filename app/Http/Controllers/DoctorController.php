@@ -8,6 +8,11 @@ use App\Models\Doctor;
 
 class DoctorController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Doctor::class, 'doctor');
+    }
+
     public function index()
     {
         return response()->json(Doctor::latest()->get());
