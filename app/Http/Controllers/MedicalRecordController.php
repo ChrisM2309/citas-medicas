@@ -1,48 +1,42 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Http\Requests\MedicalRecords\StoreMedicalRecordRequest;
+use App\Http\Requests\MedicalRecords\UpdateMedicalRecordRequest;
 use App\Models\MedicalRecord;
 use App\Models\Patient;
-use Illuminate\Http\Request;
 
 class MedicalRecordController extends Controller
 {
-        public function show(Patient $patient)
+    public function show(Patient $patient)
     {
         return response()->json($patient->medicalRecord);
     }
 
-    public function store(Request $request, Patient $patient)
+    public function store(StoreMedicalRecordRequest $request, Patient $patient)
     {
-        $validated = $request->validate([
-            'blood_type' => ['nullable', 'string', 'max:3'],
-            'allergies' => ['nullable', 'string', 'max:255'],
-            'cronic_diseases' => ['nullable', 'string', 'max:255'],
-            'medications' => ['nullable', 'string', 'max:255'],
-            'family_history' => ['nullable', 'string', 'max:255'],
-        ]);
-
         $record = MedicalRecord::create([
             'patient_id' => $patient->id,
-            ...$validated
+            ...$this->normalizedPayload($request->validated()),
         ]);
 
         return response()->json($record, 201);
     }
 
-    public function update(Request $request, Patient $patient)
+    public function update(UpdateMedicalRecordRequest $request, Patient $patient)
     {
-        $validated = $request->validate([
-            'blood_type' => ['nullable', 'string', 'max:3'],
-            'allergies' => ['nullable', 'string', 'max:255'],
-            'cronic_diseases' => ['nullable', 'string', 'max:255'],
-            'medications' => ['nullable', 'string', 'max:255'],
-            'family_history' => ['nullable', 'string', 'max:255'],
-        ]);
-
         $record = $patient->medicalRecord;
-        $record->update($validated);
+        $record->update($this->normalizedPayload($request->validated()));
 
         return response()->json($record);
+    }
+
+    private function normalizedPayload(array $validated): array
+    {
+        $validated['chronic_diseases'] = $validated['chronic_diseases'] ?? $validated['cronic_diseases'] ?? null;
+        unset($validated['cronic_diseases']);
+
+        return $validated;
     }
 }

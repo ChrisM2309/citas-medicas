@@ -18,11 +18,14 @@ class ScheduleFactory extends Factory
      */
     public function definition(): array
     {
+        $startHour = fake()->numberBetween(7, 15);
+        $durationHours = fake()->numberBetween(1, 3);
+
         return [
             'doctor_id' => Doctor::factory(),
             'day_of_week' => fake()->randomElement(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
-            'start_time' => fake()->time('H:i:s'),
-            'end_time' => fake()->time('H:i:s'),
+            'start_time' => sprintf('%02d:00:00', $startHour),
+            'end_time' => sprintf('%02d:00:00', $startHour + $durationHours),
         ];
     }
 }
