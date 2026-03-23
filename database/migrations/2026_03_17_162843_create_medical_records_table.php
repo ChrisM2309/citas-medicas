@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->integer('patient_id')->unsigned()->unique();
             $table->string('blood_type', 3)->nullable();
-            $table->string('allergies', 255)->nullable();
-            $table->string('cronic_diseases', 255)->nullable();
-            $table->string('medications', 255)->nullable();
-            $table->string('family_history', 255)->nullable();
+            $table->text('allergies')->nullable();
+            $table->text('chronic_diseases')->nullable();
+            $table->text('medications')->nullable();
+            $table->text('family_history')->nullable();
             $table->timestamps();
         });
     }
