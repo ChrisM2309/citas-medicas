@@ -14,9 +14,9 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = Role::firstOrCreate(['name' => 'ADMIN', 'guard_name' => 'api']);
-        $doctor = Role::firstOrCreate(['name' => 'DOCTOR', 'guard_name' => 'api']);
-        $assistant = Role::firstOrCreate(['name' => 'ASSISTANT', 'guard_name' => 'api']);
+        $admin = Role::firstOrCreate(['name' => 'ADMIN', 'guard_name' => 'web']);
+        $doctor = Role::firstOrCreate(['name' => 'DOCTOR', 'guard_name' => 'web']);
+        $assistant = Role::firstOrCreate(['name' => 'ASSISTANT', 'guard_name' => 'web']);
 
         // Permisos de medico
         collect([
@@ -25,7 +25,7 @@ class PermissionSeeder extends Seeder
             // Puede administrar los expedientes de sus pacientes
             'manage_medical_records',
         ])->each(function (string $permission) use ($doctor): void {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'api']);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
             $doctor->givePermissionTo($permission);
         });
 
@@ -38,11 +38,12 @@ class PermissionSeeder extends Seeder
             // Puede administrar citas
             'manage_appointments',
         ])->each(function (string $permission) use ($assistant): void {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'api']);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
             $assistant->givePermissionTo($permission);
         });
 
-        // Admin solo puede crear usuarios y activar/desactivar
-        Permission::firstOrCreate(['name' => 'manage_users', 'guard_name' => 'api']);
+        // Permiso para administrar usuarios (solo para admin)
+        Permission::firstOrCreate(['name' => 'manage_users', 'guard_name' => 'web']);
+        $admin->givePermissionTo('manage_users');
     }
 }
