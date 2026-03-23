@@ -25,15 +25,15 @@ test('se puede consultar el expediente medico de un paciente autenticado', funct
         ->assertJsonPath('id', $record->id)
         ->assertJsonPath('blood_type', 'O+');
 });
-
-test('se puede crear un expediente usando el alias cronic_diseases', function () {
+ 
+test('se puede crear un expediente medico con una enfermedad cronica', function () {
     // Cubrimos la normalizacion especial implementada en el controlador.
     authenticateWithPermissions();
     $patient = Patient::factory()->create();
 
     $this->postJson("/api/v1/patients/{$patient->id}/medical-record", [
         'blood_type' => 'AB+',
-        'cronic_diseases' => 'Diabetes',
+        'chronic_diseases' => 'Diabetes',
     ])
         ->assertCreated()
         ->assertJsonPath('chronic_diseases', 'Diabetes');

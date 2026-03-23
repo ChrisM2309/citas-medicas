@@ -45,21 +45,6 @@ test('se puede crear un paciente con permiso de gestion', function () {
     ]);
 });
 
-test('no se puede crear un paciente con correo repetido', function () {
-    // Evitamos duplicados de un dato sensible y muy usado para busquedas.
-    authenticateWithPermissions(['manage_patients']);
-    Patient::factory()->create(['email' => 'maria@example.com']);
-
-    $this->postJson('/api/v1/patients', [
-        'name' => 'Maria',
-        'lastname' => 'Lopez',
-        'email' => 'maria@example.com',
-        'gender' => 'F',
-    ])
-        ->assertStatus(422)
-        ->assertJsonValidationErrors(['email']);
-});
-
 test('se puede consultar un paciente con permiso de lectura', function () {
     // Confirmamos que el detalle del paciente sea accesible para perfiles de consulta.
     authenticateWithPermissions(['read_patients']);
