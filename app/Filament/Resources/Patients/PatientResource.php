@@ -22,7 +22,7 @@ class PatientResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::UserGroup;
 
-    protected static ?string $recordTitleAttribute = 'Pacientes';
+    protected static ?string $recordTitleAttribute = 'Paciente';
 
     protected static ?string $pluralModelLabel = 'Pacientes';
     protected static ?string $modelLabel = 'Paciente';

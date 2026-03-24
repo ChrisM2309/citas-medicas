@@ -8,6 +8,7 @@ use App\Filament\Resources\Schedules\Pages\ListSchedules;
 use App\Filament\Resources\Schedules\Schemas\ScheduleForm;
 use App\Filament\Resources\Schedules\Tables\SchedulesTable;
 use App\Models\Schedule;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -15,6 +16,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class ScheduleResource extends Resource
 {
@@ -22,7 +24,7 @@ class ScheduleResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Clock;
 
-    protected static ?string $recordTitleAttribute = 'Schedule';
+    protected static ?string $recordTitleAttribute = 'Horario';
     protected static ?string $pluralModelLabel = 'Horarios';
     protected static ?string $modelLabel = 'Horario';
 
@@ -40,9 +42,7 @@ class ScheduleResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -54,11 +54,28 @@ class ScheduleResource extends Resource
         ];
     }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
+    public static function getEloquentQuery(): Builder
     {
-        return parent::getRecordRouteBindingEloquentQuery()
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->hasAnyPermission(['read_all_appointments', 'manage_appointments'])) {
+            return $query;
+        }
+
+        if ($user->hasPermissionTo('read_own_appointments')) {
+            return $query->where('doctor_id', $user->doctor?->id ?? 0);
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 }

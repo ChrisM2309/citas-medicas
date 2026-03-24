@@ -19,8 +19,20 @@ class AppointmentController extends Controller
 
     public function index()
     {
+
         /** @var User $user */
         $user = Auth::user();
+
+        logger([
+            'user_id' => $user->id,
+            'roles' => $user->getRoleNames()->toArray(),
+            'direct_permissions' => $user->permissions->pluck('name')->toArray(),
+            'all_permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+            'has_read_all_appointments' => $user->hasPermissionTo('read_all_appointments'),
+            'has_manage_appointments' => $user->hasPermissionTo('manage_appointments'),
+            'has_read_own_appointments' => $user->hasPermissionTo('read_own_appointments'),
+            'doctor_id' => $user->doctor?->id,
+        ]);
 
         return response()->json(
             $this->visibleAppointmentsQuery($user)
