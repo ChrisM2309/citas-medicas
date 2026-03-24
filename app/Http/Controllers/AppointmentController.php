@@ -12,10 +12,13 @@ use Illuminate\Support\Facades\Gate;
 
 class AppointmentController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Appointment::class, 'appointment');
+    }
+
     public function index()
     {
-        Gate::authorize('viewAny', Appointment::class);
-
         /** @var User $user */
         $user = Auth::user();
 
@@ -28,8 +31,6 @@ class AppointmentController extends Controller
 
     public function store(StoreAppointmentRequest $request)
     {
-        Gate::authorize('create', Appointment::class);
-
         $validated = $request->validated();
 
         $appointment = Appointment::create([
@@ -42,15 +43,11 @@ class AppointmentController extends Controller
 
     public function show(Appointment $appointment)
     {
-        Gate::authorize('view', $appointment);
-
         return response()->json($appointment);
     }
 
     public function update(UpdateAppointmentRequest $request, Appointment $appointment)
     {
-        Gate::authorize('update', $appointment);
-
         $appointment->update($request->validated());
 
         return response()->json($appointment);
@@ -58,8 +55,6 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment)
     {
-        Gate::authorize('delete', $appointment);
-
         $appointment->delete();
 
         return response()->json([
@@ -101,10 +96,14 @@ class AppointmentController extends Controller
     {
         $query = Appointment::query();
 
-        if ($user->hasPermissionTo('read_appointments') && ! $user->hasPermissionTo('read_all_appointments')) {
+        if ($user->hasAnyPermission(['read_all_appointments', 'manage_appointments'])) {
+            return $query;
+        }
+
+        if ($user->hasPermissionTo('read_own_appointments')) {
             return $query->where('doctor_id', $user->doctor?->id ?? 0);
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 }
