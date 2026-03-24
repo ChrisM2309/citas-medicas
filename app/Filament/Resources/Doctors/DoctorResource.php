@@ -23,8 +23,10 @@ class DoctorResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::UserPlus;
 
     protected static ?string $recordTitleAttribute = 'Doctor';
-        protected static ?string $pluralModelLabel = 'Doctores';
+    protected static ?string $pluralModelLabel = 'Doctores';
     protected static ?string $modelLabel = 'Doctor';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {

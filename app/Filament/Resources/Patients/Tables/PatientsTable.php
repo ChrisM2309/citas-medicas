@@ -6,9 +6,12 @@ use App\Models\Patient;
 // Usamos las Acciones unificadas de Filament (v3.2+)
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 // Componentes esenciales
@@ -128,10 +131,15 @@ class PatientsTable
                     RestoreAction::make()
                         ->modalHeading("Confirmar restauración")
                         ->modalDescription(fn($record) => "¿Estás seguro de que deseas restaurar a {$record->name} {$record->lastname}?"),
-                    ])
-                        ->label('')
+                ])
+                    ->label('')
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->button(),
+            ])->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                ]),
             ]);
     }
 }

@@ -12,24 +12,25 @@ use Illuminate\Support\Facades\Gate;
 
 class ScheduleController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Schedule::class, 'schedule');
+    }
+
     public function index()
     {
-        Gate::authorize('viewAny', Schedule::class);
-
         /** @var User $user */
         $user = Auth::user();
 
         return response()->json(
             $this->visibleSchedulesQuery($user)
                 ->latest()
-                ->get(),
+                ->get()
         );
     }
 
     public function store(StoreScheduleRequest $request)
     {
-        Gate::authorize('create', Schedule::class);
-
         $schedule = Schedule::create($request->validated());
 
         return response()->json($schedule, 201);
@@ -37,15 +38,11 @@ class ScheduleController extends Controller
 
     public function show(Schedule $schedule)
     {
-        Gate::authorize('view', $schedule);
-
         return response()->json($schedule);
     }
 
     public function update(UpdateScheduleRequest $request, Schedule $schedule)
     {
-        Gate::authorize('update', $schedule);
-
         $schedule->update($request->validated());
 
         return response()->json($schedule);
@@ -53,8 +50,6 @@ class ScheduleController extends Controller
 
     public function destroy(Schedule $schedule)
     {
-        Gate::authorize('delete', $schedule);
-
         $schedule->delete();
 
         return response()->json([
@@ -81,10 +76,14 @@ class ScheduleController extends Controller
     {
         $query = Schedule::query();
 
-        if ($user->hasPermissionTo('read_appointments') && ! $user->hasPermissionTo('read_all_appointments')) {
+        if ($user->hasAnyPermission(['read_all_appointments', 'manage_appointments'])) {
+            return $query;
+        }
+
+        if ($user->hasPermissionTo('read_own_appointments')) {
             return $query->where('doctor_id', $user->doctor?->id ?? 0);
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 }

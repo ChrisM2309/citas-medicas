@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('specialty', 50);
             $table->string('phone', 9)->nullable()->unique();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

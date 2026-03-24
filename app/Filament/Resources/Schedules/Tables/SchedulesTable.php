@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Users\Tables;
+namespace App\Filament\Resources\Schedules\Tables;
 
+use Carbon\Carbon;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -9,38 +10,48 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class UsersTable
+class SchedulesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('name')
-                    ->label('Nombre')
+                TextColumn::make('doctor.user.name')
+                    ->label('Doctor')
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('email')
-                    ->label('Correo electrónico')
+                TextColumn::make('day_of_week')
+                    ->label('Día de la semana')
                     ->searchable()
-                    ->sortable(),
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'Monday' => 'Lunes',
+                        'Tuesday' => 'Martes',
+                        'Wednesday' => 'Miércoles',
+                        'Thursday' => 'Jueves',
+                        'Friday' => 'Viernes',
+                        'Saturday' => 'Sábado',
+                        'Sunday' => 'Domingo',
+                        default => $state,
+                    }),
 
-                TextColumn::make('email_verified_at')
-                    ->label('Fecha de verificación')
-                    ->dateTime()
+                TextColumn::make('start_time')
+                    ->label('Hora de inicio')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->formatStateUsing(fn($state): ?string => $state
+                        ? Carbon::createFromFormat('H:i:s', $state)->format('h:i A')
+                        : null),
 
-                IconColumn::make('is_active')
-                    ->label('Estado')
-                    ->boolean()
-                    ->trueColor('primary')
-                    ->falseColor('gray'),
+                TextColumn::make('end_time')
+                    ->label('Hora de finalización')
+                    ->sortable()
+                    ->formatStateUsing(fn($state): ?string => $state
+                        ? Carbon::createFromFormat('H:i:s', $state)->format('h:i A')
+                        : null),
 
                 TextColumn::make('created_at')
                     ->label('Fecha de registro')
@@ -69,12 +80,12 @@ class UsersTable
                     DeleteAction::make()
                         ->label('Eliminar')
                         ->modalHeading('Confirmar eliminación')
-                        ->modalDescription(fn($record) => "¿Estás seguro de que deseas eliminar a {$record->name}? Esta acción se puede revertir desde la papelera de reciclaje."),
+                        ->modalDescription(fn($record) => "¿Estás seguro de que deseas eliminar el horario de {$record->doctor->user->name}? Esta acción se puede revertir desde la papelera de reciclaje."),
 
                     RestoreAction::make()
                         ->label('Restaurar')
                         ->modalHeading('Confirmar restauración')
-                        ->modalDescription(fn($record) => "¿Estás seguro de que deseas restaurar a {$record->name}?"),
+                        ->modalDescription(fn($record) => "¿Estás seguro de que deseas restaurar el horario de {$record->doctor->user->name}?"),
                 ])
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->button()

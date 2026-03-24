@@ -9,7 +9,7 @@ class SchedulePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyPermission(['read_appointments', 'read_all_appointments', 'manage_appointments']);
+        return $user->hasAnyPermission(['read_own_appointments', 'read_all_appointments', 'manage_appointments']);
     }
 
     public function view(User $user, Schedule $schedule): bool
@@ -18,7 +18,7 @@ class SchedulePolicy
             return true;
         }
 
-        return $user->hasPermissionTo('read_appointments') && $user->doctor?->id === $schedule->doctor_id;
+        return $user->hasPermissionTo('read_own_appointments') && $user->doctor?->id === $schedule->doctor_id;
     }
 
     public function create(User $user): bool
@@ -42,6 +42,6 @@ class SchedulePolicy
             return true;
         }
 
-        return $user->hasPermissionTo('read_appointments') && $user->doctor?->id === $doctorId;
+        return $user->hasPermissionTo('read_own_appointments') && $user->doctor?->id === $doctorId;
     }
 }

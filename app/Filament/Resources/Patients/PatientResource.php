@@ -27,6 +27,8 @@ class PatientResource extends Resource
     protected static ?string $pluralModelLabel = 'Pacientes';
     protected static ?string $modelLabel = 'Paciente';
 
+    protected static ?int $navigationSort = 4;
+
     public static function form(Schema $schema): Schema
     {
         return PatientForm::configure($schema);

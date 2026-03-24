@@ -74,6 +74,12 @@ class DoctorsTable
                         ->modalHeading('Confirmar restauración')
                         ->modalDescription(fn($record) => "¿Estás seguro de que deseas restaurar a {$record->user->name}?"),
                 ])->icon('heroicon-m-ellipsis-vertical')->button()->label(''),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                ]),
             ]);
     }
 }
