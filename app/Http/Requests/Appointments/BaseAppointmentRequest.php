@@ -20,7 +20,8 @@ abstract class BaseAppointmentRequest extends FormRequest
         return [
             'appointment_start_time.regex' => 'La hora de inicio debe estar en formato HH:MM o HH:MM:SS.',
             'appointment_end_time.regex' => 'La hora de fin debe estar en formato HH:MM o HH:MM:SS.',
-            'status.in' => 'El estado de la cita no es válido.',
+            'appointment_date.after_or_equal' => 'La fecha de cita no puede estar en el pasado.',
+            'status.in' => 'El estado de la cita no es valido.',
         ];
     }
 
@@ -63,6 +64,14 @@ abstract class BaseAppointmentRequest extends FormRequest
                 return;
             }
 
+            $durationInMinutes = (strtotime($end) - strtotime($start)) / 60;
+
+            if ($durationInMinutes < 15 || $durationInMinutes > 240) {
+                $validator->errors()->add('appointment_end_time', 'La cita debe durar entre 15 minutos y 4 horas.');
+
+                return;
+            }
+
             $payload['appointment_start_time'] = $start;
             $payload['appointment_end_time'] = $end;
 
@@ -73,7 +82,7 @@ abstract class BaseAppointmentRequest extends FormRequest
             if (! $service->isWithinDoctorSchedule($payload)) {
                 $validator->errors()->add(
                     'appointment_start_time',
-                    'El doctor no tiene disponibilidad programada para este día u horario.',
+                    'El doctor no tiene disponibilidad programada para este dia u horario.',
                 );
 
                 return;
@@ -132,7 +141,7 @@ abstract class BaseAppointmentRequest extends FormRequest
                 'integer',
                 Rule::exists('doctors', 'id')->whereNull('deleted_at'),
             ],
-            'appointment_date' => ['date'],
+            'appointment_date' => ['date', 'after_or_equal:today'],
             'appointment_start_time' => ['regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'appointment_end_time' => ['regex:/^\d{2}:\d{2}(:\d{2})?$/'],
             'reason' => ['nullable', 'string', 'max:255'],

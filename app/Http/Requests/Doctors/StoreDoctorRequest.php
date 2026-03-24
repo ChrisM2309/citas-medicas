@@ -12,6 +12,13 @@ class StoreDoctorRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'phone' => $this->filled('phone') ? preg_replace('/\D+/', '', (string) $this->input('phone')) : $this->input('phone'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
@@ -22,7 +29,7 @@ class StoreDoctorRequest extends FormRequest
                 Rule::unique('doctors', 'user_id'),
             ],
             'specialty' => ['required', 'string', 'max:50'],
-            'phone' => ['nullable', 'string', 'max:9'],
+            'phone' => ['nullable', 'regex:/^\d{8,9}$/'],
         ];
     }
 

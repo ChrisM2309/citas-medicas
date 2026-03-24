@@ -259,6 +259,48 @@ test('no se puede crear una cita con hora final anterior a la inicial', function
         ->assertJsonValidationErrors(['appointment_end_time']);
 });
 
+test('no se puede crear una cita en una fecha pasada', function () {
+    // La agenda no debe aceptar nuevas citas con fecha anterior a hoy.
+    authenticateWithPermissions(['manage_appointments']);
+    $doctor = Doctor::factory()->create();
+    $patient = Patient::factory()->create();
+
+    $this->postJson('/api/v1/appointments', [
+        'doctor_id' => $doctor->id,
+        'patient_id' => $patient->id,
+        'appointment_date' => now()->subDay()->toDateString(),
+        'appointment_start_time' => '09:00',
+        'appointment_end_time' => '10:00',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['appointment_date']);
+});
+
+test('no se puede crear una cita con duracion menor a 15 minutos', function () {
+    // La duracion minima evita citas accidentales demasiado cortas.
+    authenticateWithPermissions(['manage_appointments']);
+    $doctor = Doctor::factory()->create();
+    $patient = Patient::factory()->create();
+    $date = nextMonday();
+
+    Schedule::factory()->create([
+        'doctor_id' => $doctor->id,
+        'day_of_week' => 'Monday',
+        'start_time' => '08:00:00',
+        'end_time' => '17:00:00',
+    ]);
+
+    $this->postJson('/api/v1/appointments', [
+        'doctor_id' => $doctor->id,
+        'patient_id' => $patient->id,
+        'appointment_date' => $date,
+        'appointment_start_time' => '09:00',
+        'appointment_end_time' => '09:10',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['appointment_end_time']);
+});
+
 test('al actualizar una cita se validan conflictos usando valores combinados', function () {
     // Cubrimos el caso donde el update envia solo parte del payload.
     authenticateWithPermissions(['manage_appointments']);

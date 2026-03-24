@@ -105,6 +105,28 @@ test('no se puede crear un horario con hora final anterior a la inicial', functi
         ->assertJsonValidationErrors(['end_time']);
 });
 
+test('no se puede crear un horario traslapado para el mismo doctor y dia', function () {
+    // La disponibilidad no debe tener bloques que se monten entre si.
+    authenticateWithPermissions(['manage_appointments']);
+    $doctor = Doctor::factory()->create();
+
+    Schedule::factory()->create([
+        'doctor_id' => $doctor->id,
+        'day_of_week' => 'Monday',
+        'start_time' => '08:00:00',
+        'end_time' => '12:00:00',
+    ]);
+
+    $this->postJson('/api/v1/schedules', [
+        'doctor_id' => $doctor->id,
+        'day_of_week' => 'Monday',
+        'start_time' => '11:00',
+        'end_time' => '13:00',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['start_time']);
+});
+
 test('actualizar horario valida que el dia de la semana sea permitido', function () {
     // La agenda solo acepta los dias definidos por la regla de negocio actual.
     authenticateWithPermissions(['manage_appointments']);

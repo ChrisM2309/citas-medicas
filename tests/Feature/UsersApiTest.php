@@ -55,6 +55,20 @@ test('no se puede crear un usuario con correo repetido', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
+test('el correo del usuario se normaliza antes de validar', function () {
+    // La consistencia del login depende de no tratar variantes como distintos correos.
+    authenticateWithPermissions(['manage_users']);
+    User::factory()->create(['email' => 'carlos@example.com']);
+
+    $this->postJson('/api/v1/users', [
+        'name' => 'Carlos',
+        'email' => '  CARLOS@EXAMPLE.COM ',
+        'password' => 'password123',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
+});
+
 test('se puede consultar el propio detalle de usuario autenticado', function () {
     // La policy permite ver tu propio perfil aunque no administres usuarios.
     $user = authenticateWithPermissions();

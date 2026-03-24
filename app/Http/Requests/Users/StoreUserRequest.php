@@ -12,6 +12,13 @@ class StoreUserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'email' => $this->filled('email') ? mb_strtolower(trim((string) $this->input('email'))) : $this->input('email'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [

@@ -50,6 +50,20 @@ test('no se puede crear un doctor con un user_id repetido', function () {
         ->assertJsonValidationErrors(['user_id']);
 });
 
+test('no se puede crear un doctor con telefono invalido', function () {
+    // El telefono del doctor debe respetar el formato numerico esperado.
+    authenticateWithPermissions(['manage_users']);
+    $user = User::factory()->create();
+
+    $this->postJson('/api/v1/doctors', [
+        'user_id' => $user->id,
+        'specialty' => 'Neurology',
+        'phone' => '555-ABCD',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['phone']);
+});
+
 test('se puede consultar el detalle del doctor asociado al mismo usuario', function () {
     // La policy permite al doctor ver su propio recurso aunque no administre usuarios.
     $user = authenticateWithPermissions();

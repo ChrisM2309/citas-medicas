@@ -12,6 +12,27 @@ class UpdatePatientRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $normalized = [];
+
+        if ($this->exists('email')) {
+            $normalized['email'] = $this->filled('email')
+                ? mb_strtolower(trim((string) $this->input('email')))
+                : $this->input('email');
+        }
+
+        if ($this->exists('phone')) {
+            $normalized['phone'] = $this->filled('phone')
+                ? preg_replace('/\D+/', '', (string) $this->input('phone'))
+                : $this->input('phone');
+        }
+
+        if ($normalized !== []) {
+            $this->merge($normalized);
+        }
+    }
+
     public function rules(): array
     {
         $patientId = $this->route('patient')?->id;
@@ -23,9 +44,10 @@ class UpdatePatientRequest extends FormRequest
                 'sometimes',
                 'email',
                 'max:100',
+                Rule::unique('patients', 'email')->ignore($patientId),
             ],
-            'phone' => ['nullable', 'string', 'max:9'],
-            'birth_date' => ['nullable', 'date'],
+            'phone' => ['nullable', 'regex:/^\d{8,9}$/'],
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'gender' => ['sometimes', 'string', 'max:1'],
         ];
     }

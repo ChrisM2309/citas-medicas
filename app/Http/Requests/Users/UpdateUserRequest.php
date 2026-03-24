@@ -12,6 +12,19 @@ class UpdateUserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->exists('email')) {
+            return;
+        }
+
+        $this->merge([
+            'email' => $this->filled('email')
+                ? mb_strtolower(trim((string) $this->input('email')))
+                : $this->input('email'),
+        ]);
+    }
+
     public function rules(): array
     {
         $userId = $this->route('user')?->id;

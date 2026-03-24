@@ -12,6 +12,19 @@ class UpdateDoctorRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->exists('phone')) {
+            return;
+        }
+
+        $this->merge([
+            'phone' => $this->filled('phone')
+                ? preg_replace('/\D+/', '', (string) $this->input('phone'))
+                : $this->input('phone'),
+        ]);
+    }
+
     public function rules(): array
     {
         $doctorId = $this->route('doctor')?->id;
@@ -24,7 +37,7 @@ class UpdateDoctorRequest extends FormRequest
                 Rule::unique('doctors', 'user_id')->ignore($doctorId),
             ],
             'specialty' => ['sometimes', 'string', 'max:50'],
-            'phone' => ['nullable', 'string', 'max:9'],
+            'phone' => ['nullable', 'regex:/^\d{8,9}$/'],
         ];
     }
 

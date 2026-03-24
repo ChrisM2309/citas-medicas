@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Patients;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePatientRequest extends FormRequest
 {
@@ -11,14 +12,22 @@ class StorePatientRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'email' => $this->filled('email') ? mb_strtolower(trim((string) $this->input('email'))) : $this->input('email'),
+            'phone' => $this->filled('phone') ? preg_replace('/\D+/', '', (string) $this->input('phone')) : $this->input('phone'),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:100'],
             'lastname' => ['required', 'string', 'max:100'],
-            'email' => ['nullable', 'email', 'max:100'],
-            'phone' => ['nullable', 'string', 'max:9'],
-            'birth_date' => ['nullable', 'date'],
+            'email' => ['nullable', 'email', 'max:100', Rule::unique('patients', 'email')],
+            'phone' => ['nullable', 'regex:/^\d{8,9}$/'],
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
             'gender' => ['required', 'string', 'max:1'],
         ];
     }

@@ -45,6 +45,51 @@ test('se puede crear un paciente con permiso de gestion', function () {
     ]);
 });
 
+test('no se puede crear un paciente con fecha de nacimiento futura', function () {
+    // Evitamos fechas imposibles para un dato historico.
+    authenticateWithPermissions(['manage_patients']);
+
+    $this->postJson('/api/v1/patients', [
+        'name' => 'Maria',
+        'lastname' => 'Lopez',
+        'email' => 'maria-futura@example.com',
+        'birth_date' => now()->addDay()->toDateString(),
+        'gender' => 'F',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['birth_date']);
+});
+
+test('no se puede crear un paciente con telefono invalido', function () {
+    // El telefono debe quedar limitado a una forma consistente.
+    authenticateWithPermissions(['manage_patients']);
+
+    $this->postJson('/api/v1/patients', [
+        'name' => 'Maria',
+        'lastname' => 'Lopez',
+        'email' => 'maria-telefono@example.com',
+        'phone' => 'abc-123',
+        'gender' => 'F',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['phone']);
+});
+
+test('el correo del paciente se normaliza antes de validar unicidad', function () {
+    // Espacios y mayusculas no deben permitir duplicados aparentes.
+    authenticateWithPermissions(['manage_patients']);
+    Patient::factory()->create(['email' => 'maria@example.com']);
+
+    $this->postJson('/api/v1/patients', [
+        'name' => 'Maria',
+        'lastname' => 'Lopez',
+        'email' => '  MARIA@EXAMPLE.COM  ',
+        'gender' => 'F',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
+});
+
 test('se puede consultar un paciente con permiso de lectura', function () {
     // Confirmamos que el detalle del paciente sea accesible para perfiles de consulta.
     authenticateWithPermissions(['read_patients']);

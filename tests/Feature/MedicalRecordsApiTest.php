@@ -62,14 +62,40 @@ test('se puede actualizar un expediente medico existente', function () {
         ->assertJsonPath('blood_type', 'B+');
 });
 
-test('el expediente valida la longitud maxima del tipo de sangre', function () {
-    // Una validacion simple evita guardar valores inconsistentes.
+test('el expediente valida el catalogo permitido de tipo de sangre', function () {
+    // El tipo de sangre debe estar dentro del catalogo permitido.
     authenticateWithPermissions();
     $patient = Patient::factory()->create();
 
     $this->postJson("/api/v1/patients/{$patient->id}/medical-record", [
-        'blood_type' => 'AB++',
+        'blood_type' => 'ZZ',
     ])
         ->assertStatus(422)
         ->assertJsonValidationErrors(['blood_type']);
+});
+
+test('no se puede crear un segundo expediente para el mismo paciente', function () {
+    // La regla de un expediente por paciente debe fallar antes del error de base de datos.
+    authenticateWithPermissions();
+    $patient = Patient::factory()->create();
+    MedicalRecord::factory()->create(['patient_id' => $patient->id]);
+
+    $this->postJson("/api/v1/patients/{$patient->id}/medical-record", [
+        'blood_type' => 'O+',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['patient_id']);
+});
+
+test('no se puede enviar chronic_diseases y cronic_diseases con valores distintos', function () {
+    // Los dos aliases no deben aceptar datos contradictorios.
+    authenticateWithPermissions();
+    $patient = Patient::factory()->create();
+
+    $this->postJson("/api/v1/patients/{$patient->id}/medical-record", [
+        'chronic_diseases' => 'Diabetes',
+        'cronic_diseases' => 'Hipertension',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['chronic_diseases']);
 });

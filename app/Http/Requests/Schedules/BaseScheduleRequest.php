@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Schedules;
 
+use App\Models\Schedule;
 use App\Services\AppointmentValidationService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -44,6 +45,31 @@ abstract class BaseScheduleRequest extends FormRequest
 
             if (! $start || ! $end || $end <= $start) {
                 $validator->errors()->add('end_time', 'La hora de fin debe ser posterior a la hora de inicio.');
+
+                return;
+            }
+
+            $doctorId = $this->input('doctor_id', $this->route('schedule')?->doctor_id);
+            $dayOfWeek = $this->input('day_of_week', $this->route('schedule')?->day_of_week);
+            $currentScheduleId = $this->route('schedule')?->id;
+
+            if (! $doctorId || ! $dayOfWeek) {
+                return;
+            }
+
+            $hasOverlap = Schedule::query()
+                ->where('doctor_id', $doctorId)
+                ->where('day_of_week', $dayOfWeek)
+                ->when($currentScheduleId, fn ($query) => $query->whereKeyNot($currentScheduleId))
+                ->where(function ($query) use ($start, $end): void {
+                    $query
+                        ->where('start_time', '<', $end)
+                        ->where('end_time', '>', $start);
+                })
+                ->exists();
+
+            if ($hasOverlap) {
+                $validator->errors()->add('start_time', 'El doctor ya tiene un horario configurado que se traslapa con este rango.');
             }
         });
     }
