@@ -12,12 +12,12 @@
                     </div>
                 @else
                     <select
-                        wire:model.live="doctorId"
+                        wire:change="updateDoctor($event.target.value)"
                         @disabled($this->doctorLocked)
                         class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:disabled:bg-gray-800"
                     >
                         @foreach ($this->doctorOptions as $id => $label)
-                            <option value="{{ $id }}">{{ $label }}</option>
+                            <option value="{{ $id }}" @selected((int) $id === (int) $this->doctorId)>{{ $label }}</option>
                         @endforeach
                     </select>
                 @endif
@@ -30,22 +30,23 @@
 
                 <input
                     type="month"
-                    wire:model.live="month"
+                    value="{{ $this->month }}"
+                    wire:change="updateMonth($event.target.value)"
                     class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                 />
             </div>
 
             <div class="flex items-end gap-2">
-                <x-filament::button color="gray" wire:click="previousMonth" class="w-full">
+                <x-filament::button color="gray" wire:click="goToPreviousMonth" class="w-full">
                     Mes anterior
                 </x-filament::button>
-                <x-filament::button wire:click="nextMonth" class="w-full">
+                <x-filament::button wire:click="goToNextMonth" class="w-full">
                     Mes siguiente
                 </x-filament::button>
             </div>
         </section>
 
-        <section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <section wire:key="calendar-{{ $this->doctorId ?? 'none' }}-{{ $this->month }}" class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">

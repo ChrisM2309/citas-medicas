@@ -1,0 +1,16 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*.blade.php';
+
+@layer base {
+    .dark .fi-main select,
+    .dark .fi-main input[type='month'] {
+        color-scheme: dark;
+    }
+
+    .dark .fi-main select option {
+        background-color: rgb(17 24 39);
+        color: rgb(243 244 246);
+    }
+}

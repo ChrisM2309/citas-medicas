@@ -60,42 +60,44 @@ class DoctorAvailabilityCalendar extends Page
             return false;
         }
 
-        return $user->hasAnyPermission(['read_appointments', 'read_all_appointments', 'manage_appointments', 'manage_users']);
+        return $user->hasAnyRole(['ADMIN', 'ASSISTANT', 'DOCTOR']);
     }
 
-    public function previousMonth(): void
+    public function goToPreviousMonth(): void
     {
-        $currentMonth = Carbon::createFromFormat('Y-m', $this->month)->startOfMonth();
-        $this->month = $currentMonth->subMonth()->format('Y-m');
+        $this->month = $this->resolveMonthStart()
+            ->subMonth()
+            ->format('Y-m');
 
         $this->refreshCalendar();
     }
 
-    public function nextMonth(): void
+    public function goToNextMonth(): void
     {
-        $currentMonth = Carbon::createFromFormat('Y-m', $this->month)->startOfMonth();
-        $this->month = $currentMonth->addMonth()->format('Y-m');
+        $this->month = $this->resolveMonthStart()
+            ->addMonth()
+            ->format('Y-m');
 
         $this->refreshCalendar();
     }
 
-    public function updatedDoctorId(): void
+    public function updateDoctor(string $doctorId): void
     {
+        $this->doctorId = is_numeric($doctorId) ? (int) $doctorId : null;
+
         $this->refreshCalendar();
     }
 
-    public function updatedMonth(string $value): void
+    public function updateMonth(string $value): void
     {
-        if (! preg_match('/^\d{4}-\d{2}$/', $value)) {
-            $this->month = now()->format('Y-m');
-        }
+        $this->month = $this->normalizeMonth($value);
 
         $this->refreshCalendar();
     }
 
     public function getMonthLabelProperty(): string
     {
-        return Carbon::createFromFormat('Y-m', $this->month)
+        return $this->resolveMonthStart()
             ->locale('es')
             ->translatedFormat('F Y');
     }
@@ -109,12 +111,18 @@ class DoctorAvailabilityCalendar extends Page
             return;
         }
 
-        $monthStart = Carbon::createFromFormat('Y-m', $this->month)->startOfMonth();
+        $monthStart = $this->resolveMonthStart();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
-        $doctor = Doctor::query()
+        $doctorQuery = Doctor::query()
             ->with('user:id,name')
-            ->find($this->doctorId);
+            ->whereKey($this->doctorId);
+
+        if ($this->doctorLocked) {
+            $doctorQuery->withTrashed();
+        }
+
+        $doctor = $doctorQuery->first();
 
         if (! $doctor) {
             $this->selectedDoctorName = null;
@@ -126,15 +134,18 @@ class DoctorAvailabilityCalendar extends Page
         $this->selectedDoctorName = $doctor->user?->name ?? "Doctor #{$doctor->id}";
 
         $schedulesByDay = $doctor->schedules()
-            ->get()
-            ->groupBy('day_of_week');
+            ->selectRaw('day_of_week, COUNT(*) as total')
+            ->groupBy('day_of_week')
+            ->pluck('total', 'day_of_week');
 
         $appointmentsByDate = Appointment::query()
+            ->selectRaw('appointment_date, COUNT(*) as total')
             ->where('doctor_id', $doctor->id)
-            ->whereBetween('appointment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->where('status', '!=', 'canceled')
-            ->get()
-            ->groupBy('appointment_date');
+            ->whereDate('appointment_date', '>=', $monthStart->toDateString())
+            ->whereDate('appointment_date', '<=', $monthEnd->toDateString())
+            ->whereIn('status', ['scheduled', 'completed'])
+            ->groupBy('appointment_date')
+            ->pluck('total', 'appointment_date');
 
         $calendarCells = [];
 
@@ -146,20 +157,19 @@ class DoctorAvailabilityCalendar extends Page
 
         while ($cursor->lte($monthEnd)) {
             $dayKey = $cursor->toDateString();
-            $daySchedules = $schedulesByDay->get($cursor->format('l'), collect());
-            $dayAppointments = $appointmentsByDate->get($dayKey, collect());
+            $schedulesCount = (int) ($schedulesByDay->get($cursor->format('l')) ?? 0);
+            $appointmentsCount = (int) ($appointmentsByDate->get($dayKey) ?? 0);
 
-            $hasSchedule = $daySchedules->isNotEmpty();
-            $appointmentsCount = $dayAppointments->count();
-            $state = $hasSchedule
-                ? ($appointmentsCount > 0 ? 'occupied' : 'available')
-                : 'unavailable';
+            $hasSchedule = $schedulesCount > 0;
+            $state = $appointmentsCount > 0
+                ? 'occupied'
+                : ($hasSchedule ? 'available' : 'unavailable');
 
             $calendarCells[] = [
                 'day' => $cursor->day,
                 'date' => $dayKey,
                 'state' => $state,
-                'schedules_count' => $daySchedules->count(),
+                'schedules_count' => $schedulesCount,
                 'appointments_count' => $appointmentsCount,
             ];
 
@@ -176,7 +186,7 @@ class DoctorAvailabilityCalendar extends Page
     private function resolveInitialDoctorId(): ?int
     {
         if ($this->doctorLocked) {
-            return $this->currentUser()->doctor?->id;
+            return $this->currentDoctor()?->id;
         }
 
         $firstDoctorId = array_key_first($this->doctorOptions);
@@ -189,10 +199,8 @@ class DoctorAvailabilityCalendar extends Page
      */
     private function buildDoctorOptions(): array
     {
-        $user = $this->currentUser();
-
         if ($this->doctorLocked) {
-            $doctor = $user->doctor?->loadMissing('user:id,name');
+            $doctor = $this->currentDoctor();
 
             if (! $doctor) {
                 return [];
@@ -215,6 +223,19 @@ class DoctorAvailabilityCalendar extends Page
             ->all();
     }
 
+    private function currentDoctor(): ?Doctor
+    {
+        $query = Doctor::query()
+            ->with('user:id,name')
+            ->where('user_id', $this->currentUser()->id);
+
+        if ($this->currentUser()->hasRole('DOCTOR')) {
+            $query->withTrashed();
+        }
+
+        return $query->first();
+    }
+
     private function formatDoctorLabel(Doctor $doctor): string
     {
         $name = $doctor->user?->name ?? "Doctor #{$doctor->id}";
@@ -226,7 +247,27 @@ class DoctorAvailabilityCalendar extends Page
     {
         $user = $this->currentUser();
 
-        return $user->hasPermissionTo('read_appointments') && ! $user->hasAnyPermission(['read_all_appointments', 'manage_appointments']);
+        if ($user->hasAnyRole(['ADMIN', 'ASSISTANT'])) {
+            return false;
+        }
+
+        return $user->hasRole('DOCTOR');
+    }
+
+    private function normalizeMonth(string $value): string
+    {
+        if (preg_match('/^\d{4}-\d{2}$/', $value)) {
+            return $value;
+        }
+
+        return now()->startOfMonth()->format('Y-m');
+    }
+
+    private function resolveMonthStart(): Carbon
+    {
+        $this->month = $this->normalizeMonth($this->month);
+
+        return Carbon::createFromFormat('Y-m', $this->month)->startOfMonth();
     }
 
     private function currentUser(): User
