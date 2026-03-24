@@ -37,6 +37,8 @@ class DoctorSeeder extends Seeder
             ->count($missingDoctors)
             ->create()
             ->each(function (User $user): void {
+                $user->assignRole('DOCTOR');
+
                 Doctor::factory()->create([
                     'user_id' => $user->id,
                 ]);
