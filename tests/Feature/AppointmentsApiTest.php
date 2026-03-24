@@ -28,7 +28,7 @@ test('un gestor puede ver todas las citas', function () {
 
 test('un doctor solo ve sus propias citas en el index', function () {
     // La policy debe acotar la vista de un doctor a su agenda.
-    $user = authenticateWithPermissions(['read_appointments']);
+    $user = authenticateWithPermissions(['read_own_appointments']);
     $ownDoctor = Doctor::factory()->create(['user_id' => $user->id]);
     $otherDoctor = Doctor::factory()->create();
 
@@ -44,7 +44,7 @@ test('un doctor solo ve sus propias citas en el index', function () {
 
 test('un doctor puede consultar una cita propia', function () {
     // El detalle de una cita propia debe estar disponible para el medico asignado.
-    $user = authenticateWithPermissions(['read_appointments']);
+    $user = authenticateWithPermissions(['read_own_appointments']);
     $doctor = Doctor::factory()->create(['user_id' => $user->id]);
     $appointment = Appointment::factory()->create(['doctor_id' => $doctor->id]);
 
@@ -65,7 +65,7 @@ test('un doctor no puede consultar una cita de otro doctor', function () {
 
 test('un doctor puede consultar sus citas por endpoint de doctor', function () {
     // El endpoint filtrado por doctor debe devolver solo lo suyo.
-    $user = authenticateWithPermissions(['read_appointments']);
+    $user = authenticateWithPermissions(['read_own_appointments']);
     $doctor = Doctor::factory()->create(['user_id' => $user->id]);
     Appointment::factory()->create(['doctor_id' => $doctor->id]);
 

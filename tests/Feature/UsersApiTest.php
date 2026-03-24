@@ -11,7 +11,7 @@ test('el listado de usuarios requiere autenticacion', function () {
 
 test('el listado de usuarios devuelve una coleccion resource', function () {
     // Confirmamos la estructura JSON esperada por el frontend.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $userA = User::factory()->create(['is_active' => true]);
     $userB = User::factory()->create(['is_active' => true]);
 
@@ -24,7 +24,7 @@ test('el listado de usuarios devuelve una coleccion resource', function () {
 
 test('se puede crear un usuario y la contrasena queda hasheada', function () {
     // Este caso protege un detalle de seguridad muy importante.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
 
     $response = $this->postJson('/api/v1/users', [
         'name' => 'Carlos',
@@ -43,7 +43,7 @@ test('se puede crear un usuario y la contrasena queda hasheada', function () {
 
 test('no se puede crear un usuario con correo repetido', function () {
     // Protegemos la unicidad del login.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     User::factory()->create(['email' => 'carlos@example.com']);
 
     $this->postJson('/api/v1/users', [
@@ -55,10 +55,9 @@ test('no se puede crear un usuario con correo repetido', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-test('se puede consultar el detalle de un usuario autenticado', function () {
-    // El show usa resource individual y debe respetar esa forma.
-    authenticateWithPermissions();
-    $user = User::factory()->create();
+test('se puede consultar el propio detalle de usuario autenticado', function () {
+    // La policy permite ver tu propio perfil aunque no administres usuarios.
+    $user = authenticateWithPermissions();
 
     $this->getJson("/api/v1/users/{$user->id}")
         ->assertOk()
@@ -67,7 +66,7 @@ test('se puede consultar el detalle de un usuario autenticado', function () {
 
 test('se puede actualizar un usuario incluyendo su estado activo', function () {
     // Cubrimos un cambio comun de administracion.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $user = User::factory()->create(['is_active' => true]);
 
     $this->putJson("/api/v1/users/{$user->id}", [
@@ -81,12 +80,12 @@ test('se puede actualizar un usuario incluyendo su estado activo', function () {
 
 test('se puede eliminar un usuario autenticado', function () {
     // El controlador responde con mensaje simple al borrar un usuario.
-    authenticateWithPermissions();
+    authenticateWithPermissions(['manage_users']);
     $user = User::factory()->create();
 
     $this->deleteJson("/api/v1/users/{$user->id}")
         ->assertOk()
         ->assertJsonPath('message', 'Usuario eliminado correctamente');
 
-    $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    $this->assertSoftDeleted('users', ['id' => $user->id]);
 });

@@ -16,7 +16,7 @@ use App\Policies\UserPolicy;
 test('appointment policy permite viewAny a quien tiene permiso de lectura', function () {
     // La policy debe habilitar el listado a perfiles que leen citas.
     $policy = new AppointmentPolicy();
-    $user = createUserWithPermissions(['read_appointments']);
+    $user = createUserWithPermissions(['read_own_appointments']);
 
     expect($policy->viewAny($user))->toBeTrue();
 });
@@ -24,7 +24,7 @@ test('appointment policy permite viewAny a quien tiene permiso de lectura', func
 test('appointment policy permite ver una cita propia al doctor asignado', function () {
     // Un doctor lector debe poder consultar sus propias citas.
     $policy = new AppointmentPolicy();
-    $user = createUserWithPermissions(['read_appointments']);
+    $user = createUserWithPermissions(['read_own_appointments']);
     $doctor = Doctor::factory()->create(['user_id' => $user->id]);
     $appointment = Appointment::factory()->create(['doctor_id' => $doctor->id]);
 
@@ -70,7 +70,7 @@ test('schedule policy permite viewAny a quien gestiona citas', function () {
 test('schedule policy permite ver un horario propio al doctor lector', function () {
     // El doctor debe poder ver su propia disponibilidad.
     $policy = new SchedulePolicy();
-    $user = createUserWithPermissions(['read_appointments']);
+    $user = createUserWithPermissions(['read_own_appointments']);
     $doctor = Doctor::factory()->create(['user_id' => $user->id]);
     $schedule = Schedule::factory()->create(['doctor_id' => $doctor->id]);
 

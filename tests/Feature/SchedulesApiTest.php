@@ -26,7 +26,7 @@ test('un gestor de citas puede ver todos los horarios', function () {
 
 test('un doctor solo ve sus propios horarios en el index', function () {
     // La policy debe filtrar el listado al doctor autenticado.
-    $user = authenticateWithPermissions(['read_appointments']);
+    $user = authenticateWithPermissions(['read_own_appointments']);
     $ownDoctor = Doctor::factory()->create(['user_id' => $user->id]);
     $otherDoctor = Doctor::factory()->create();
 
@@ -42,7 +42,7 @@ test('un doctor solo ve sus propios horarios en el index', function () {
 
 test('un doctor puede consultar sus horarios por endpoint especifico', function () {
     // El endpoint por doctor debe funcionar para el medico dueño del recurso.
-    $user = authenticateWithPermissions(['read_appointments']);
+    $user = authenticateWithPermissions(['read_own_appointments']);
     $doctor = Doctor::factory()->create(['user_id' => $user->id]);
     Schedule::factory()->create(['doctor_id' => $doctor->id, 'day_of_week' => 'Monday']);
 
