@@ -49,7 +49,10 @@ class AppointmentForm
 
                 DatePicker::make('appointment_date')
                     ->label('Fecha de cita')
-                    ->required(),
+                    ->required()
+                    ->minDate(fn(string $operation) => $operation === 'create'
+                        ? now('America/El_Salvador')->toDateString()
+                        : null),
 
                 TimePicker::make('appointment_start_time')
                     ->label('Hora de inicio')

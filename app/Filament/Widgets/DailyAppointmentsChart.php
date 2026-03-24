@@ -3,9 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Appointment;
-use App\Models\User;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\Auth;
 
 class DailyAppointmentsChart extends ChartWidget
 {
@@ -25,33 +23,20 @@ class DailyAppointmentsChart extends ChartWidget
 
     protected function getData(): array
     {
-        /** @var User|null $user */
-        $user = Auth::user();
-
         $days = match ($this->filter) {
             '30_days' => 30,
             default => 7,
         };
 
-        $startDate = now()->subDays($days - 1)->startOfDay();
-        $endDate = now()->endOfDay();
+        $startDate = now('America/El_Salvador')->subDays($days - 1)->startOfDay();
+        $endDate = now('America/El_Salvador')->endOfDay();
 
-        $query = Appointment::query()
+        $appointmentsByDay = Appointment::query()
             ->whereBetween('appointment_date', [
                 $startDate->toDateString(),
                 $endDate->toDateString(),
             ])
-            ->where('status', 'scheduled');
-
-        if (! $user?->hasAnyPermission(['read_all_appointments', 'manage_appointments'])) {
-            if ($user?->hasPermissionTo('read_own_appointments')) {
-                $query->where('doctor_id', $user->doctor?->id ?? 0);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
-
-        $appointmentsByDay = $query
+            ->whereIn('status', ['scheduled', 'completed'])
             ->selectRaw('appointment_date, COUNT(*) as total')
             ->groupBy('appointment_date')
             ->orderBy('appointment_date')
