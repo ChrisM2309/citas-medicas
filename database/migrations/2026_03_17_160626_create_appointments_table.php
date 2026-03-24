@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('status', 20)->default('scheduled');
             $table->string('reason', 255)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
